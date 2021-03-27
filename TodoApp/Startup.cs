@@ -39,26 +39,31 @@ namespace TodoApp
                 options.UseSqlite(
                     Configuration.GetConnectionString("DefaultConnection")));
 
+            var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
+
+            var tokenValidationParams = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                RequireExpirationTime = false
+            };
+
+            services.AddSingleton(tokenValidationParams);
+
             services
                 .AddAuthentication(options =>
                 {
                     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;})
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(jwt =>
                 {
-                    var key = Encoding.ASCII.GetBytes(Configuration["JwtConfig:Secret"]);
-
                     jwt.SaveToken = true;
-                    jwt.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(key),
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
-                        ValidateLifetime = true,
-                        RequireExpirationTime = false
-                    };
+                    jwt.TokenValidationParameters = tokenValidationParams;
                 });
 
             services
